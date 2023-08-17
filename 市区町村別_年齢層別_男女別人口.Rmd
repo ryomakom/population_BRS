@@ -9,6 +9,8 @@ author: 朝日新聞デジタル企画報道部　小宮山亮磨 @ryomakom
 
 データの出典は[こちら](https://www.e-stat.go.jp/stat-search/files?page=1&layout=datalist&toukei=00200241&tstat=000001039591&cycle=7&tclass1=000001039601&tclass2val=0)。
 
+年齢階級は2014年までは「79歳」まで、2015以降は「99歳」まで、5歳刻みで記録されている。さらに高齢の人は、それぞれ「80歳以上」「100歳以上」とひとまとめにされる。
+
 ```{r}
 # パッケージ読み込み
 library(tidyverse)
@@ -110,7 +112,10 @@ pop <- bind_rows(pop1995_2020,pop2021_2023) %>%
   select(year,everything()) %>% 
   pivot_longer(cols=c(-year,-code,-pref,-city,-sex),names_to = "age",values_to = "population") %>%
   mutate(pref=str_replace(pref,"　","")) %>%
-  mutate(pref=str_replace(pref,"\\*",""))
+  mutate(pref=str_replace(pref,"\\*","")) %>%
+  mutate(city=str_replace(city,"　","")) %>%
+  mutate(city=str_replace(city,"\\*","")) %>% 
+  filter(!is.na(population))
 
 # CSVファイルを吐き出す。ただしファイルが大きいとGithubにアップロードできないので、ニ分割する。Github上には二つのファイルをさらに圧縮したものを置いている。
 
@@ -121,6 +126,9 @@ pop %>%
 pop %>%
   filter(year>=2010) %>% 
   write_excel_csv("population2.csv")
+
+pop %>% 
+  write_excel_csv("population.csv")
 
 ```
 

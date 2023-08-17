@@ -1,0 +1,119 @@
+---
+title: "市区町村別・年齢層別・男女別人口"
+output: html_document
+date: "2023-08-17"
+author: 朝日新聞デジタル企画報道部　小宮山亮磨 @ryomakom
+---
+
+住民基本台帳に基づく、市区町村別・年齢層別・男女別の人口について、データがある1995年から2023年までのものを読み込み、扱いやすいtidyな形にまとめ直すコードを以下に書いていきます。
+
+データの出典は[こちら](https://www.e-stat.go.jp/stat-search/files?page=1&layout=datalist&toukei=00200241&tstat=000001039591&cycle=7&tclass1=000001039601&tclass2val=0)。
+
+```{r}
+# パッケージ読み込み
+library(tidyverse)
+library(readxl)
+
+
+# 1995~2020年までのデータ読み込み＆合体
+pop1995_2020 <- bind_rows(read_excel("data/9504snen.xls",skip=1) %>% mutate(year=1995),
+                          read_excel("data/9604snen.xls",skip=1) %>% mutate(year=1996),
+                          read_excel("data/9704snen.xls",skip=1) %>% mutate(year=1997),
+                          read_excel("data/9804snen.xls",skip=1) %>% mutate(year=1998),
+                          read_excel("data/9904snen.xls",skip=1) %>% mutate(year=1999),
+                          read_excel("data/0004snen.xls",skip=1) %>% mutate(year=2000),
+                          read_excel("data/0104snen.xls",skip=1) %>% mutate(year=2001),
+                          read_excel("data/0204snen.xls",skip=1) %>% mutate(year=2002),
+                          read_excel("data/0304snen.xls",skip=1) %>% mutate(year=2003),
+                          read_excel("data/0404snen.xls",skip=1) %>% mutate(year=2004),
+                          read_excel("data/0504snen.xls",skip=1) %>% mutate(year=2005),
+                          read_excel("data/0604snen.xls",skip=1) %>% mutate(year=2006),
+                          read_excel("data/0704snen.xls",skip=1) %>% mutate(year=2007),
+                          read_excel("data/0804snen.xls",skip=1) %>% mutate(year=2008),
+                          read_excel("data/0904snen.xls",skip=1) %>% mutate(year=2009),
+                          read_excel("data/1004snen.xls",skip=1) %>% mutate(year=2010),
+                          read_excel("data/1104snen.xls",skip=1) %>% mutate(year=2011),
+                          read_excel("data/1204snen.xls",skip=1) %>% mutate(year=2012),
+                          read_excel("data/1304ssnen.xls",skip=1) %>% mutate(year=2013),
+                          read_excel("data/1404ssnen.xls",skip=1) %>% mutate(year=2014),
+                          read_excel("data/1504ssnen.xls",skip=1) %>% mutate(year=2015),
+                          read_excel("data/1604ssnen.xls",skip=1) %>% mutate(year=2016),
+                          read_excel("data/1704ssnen.xls",skip=1) %>% mutate(year=2017),
+                          read_excel("data/1804ssnen.xls",skip=1) %>% mutate(year=2018),
+                          read_excel("data/1904ssnen.xls",skip=1) %>% mutate(year=2019),
+                          read_excel("data/2004ssnen.xls",skip=1) %>% mutate(year=2020))
+
+# 2021~2023年までのデータ読み込み＆合体
+pop2021_2023 <- bind_rows(read_excel("data/2104ssnen.xlsx",skip=1) %>% mutate(year=2021),
+                          read_excel("data/2204ssnen.xlsx",skip=1) %>% mutate(year=2022),
+                          read_excel("data/2304ssnen.xlsx",skip=1) %>% mutate(year=2023))
+
+# 全部のデータ合体＆整形
+pop1995_2020 <- pop1995_2020 %>%
+  rename(code=団体コード,
+         pref=都道府県名,
+         city=市区町村名,
+         sex=性別,
+         all=総数,
+         a00_04=`0～4歳`,
+         a05_09=`5～9`,
+         a10_14=`10～14`,
+         a15_19=`15～19`,
+         a20_24=`20～24`,
+         a25_29=`25～29`,
+         a30_34=`30～34`,
+         a35_39=`35～39`,
+         a40_44=`40～44`,
+         a45_49=`45～49`,
+         a50_54=`50～54`,
+         a55_59=`55～59`,
+         a60_64=`60～64`,
+         a65_69=`65～69`,
+         a70_74=`70～74`,
+         a75_79=`75～79`,
+         a80_84=`80～84`,
+         a85_89=`85～89`,
+         a90_94=`90～94`,
+         a95_99=`95～99`,
+         a100_=`100歳以上`)
+
+pop2021_2023 <- pop2021_2023 %>%
+  rename(code=団体コード,
+         pref=都道府県名,
+         city=市区町村名,
+         sex=性別,
+         all=総数,
+         a00_04=`0歳～4歳`,
+         a05_09=`5歳～9歳`,
+         a10_14=`10歳～14歳`,
+         a15_19=`15歳～19歳`,
+         a20_24=`20歳～24歳`,
+         a25_29=`25歳～29歳`,
+         a30_34=`30歳～34歳`,
+         a35_39=`35歳～39歳`,
+         a40_44=`40歳～44歳`,
+         a45_49=`45歳～49歳`,
+         a50_54=`50歳～54歳`,
+         a55_59=`55歳～59歳`,
+         a60_64=`60歳～64歳`,
+         a65_69=`65歳～69歳`,
+         a70_74=`70歳～74歳`,
+         a75_79=`75歳～79歳`,
+         a80_84=`80歳～84歳`,
+         a85_89=`85歳～89歳`,
+         a90_94=`90歳～94歳`,
+         a95_99=`95歳～99歳`,
+         a100_=`100歳以上`)
+
+pop <- left_join(pop1995_2020,pop2021_2023) %>% 
+  select(-`80歳以上`,-`（修正総数）`) %>% 
+  select(year,everything()) %>% 
+  pivot_longer(cols=c(-year,-code,-pref,-city,-sex),names_to = "age",values_to = "population")
+
+# CSVファイルを吐き出す
+
+pop %>% 
+  write_excel_csv("population.csv")
+
+```
+

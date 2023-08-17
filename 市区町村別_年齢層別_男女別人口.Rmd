@@ -105,15 +105,22 @@ pop2021_2023 <- pop2021_2023 %>%
          a95_99=`95歳～99歳`,
          a100_=`100歳以上`)
 
-pop <- left_join(pop1995_2020,pop2021_2023) %>% 
+pop <- bind_rows(pop1995_2020,pop2021_2023) %>% 
   select(-`80歳以上`,-`（修正総数）`) %>% 
   select(year,everything()) %>% 
-  pivot_longer(cols=c(-year,-code,-pref,-city,-sex),names_to = "age",values_to = "population")
+  pivot_longer(cols=c(-year,-code,-pref,-city,-sex),names_to = "age",values_to = "population") %>%
+  mutate(pref=str_replace(pref,"　","")) %>%
+  mutate(pref=str_replace(pref,"\\*",""))
 
-# CSVファイルを吐き出す
+# CSVファイルを吐き出す。ただしファイルが大きいとGithubにアップロードできないので、ニ分割する。Github上には二つのファイルをさらに圧縮したものを置いている。
 
 pop %>% 
-  write_excel_csv("population.csv")
+  filter(year<2010) %>% 
+  write_excel_csv("population1.csv")
+
+pop %>%
+  filter(year>=2010) %>% 
+  write_excel_csv("population2.csv")
 
 ```
 

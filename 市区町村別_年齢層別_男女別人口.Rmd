@@ -1,7 +1,7 @@
 ---
 title: "市区町村別・年齢層別・男女別人口"
 output: html_document
-date: "2023-08-17"
+date: "2024-03-05"
 author: 朝日新聞デジタル企画報道部　小宮山亮磨 @ryomakom
 ---
 
@@ -10,6 +10,8 @@ author: 朝日新聞デジタル企画報道部　小宮山亮磨 @ryomakom
 データの出典は[こちら](https://www.e-stat.go.jp/stat-search/files?page=1&layout=datalist&toukei=00200241&tstat=000001039591&cycle=7&tclass1=000001039601&tclass2val=0)。
 
 年齢階級は2014年までは「79歳」まで、2015以降は「99歳」まで、5歳刻みで記録されている。さらに高齢の人は、それぞれ「80歳以上」「100歳以上」とひとまとめにされる。
+
+2013年以降は「総計」「日本人住民」「外国人住民」のそれぞれにデータが分かれている。2012年以前のデータは日本人住民を対象にしたものなので、2013年以降についても日本人住民のデータを扱う。
 
 ```{r}
 # パッケージ読み込み
@@ -36,19 +38,19 @@ pop1995_2020 <- bind_rows(read_excel("data/9504snen.xls",skip=1) %>% mutate(year
                           read_excel("data/1004snen.xls",skip=1) %>% mutate(year=2010),
                           read_excel("data/1104snen.xls",skip=1) %>% mutate(year=2011),
                           read_excel("data/1204snen.xls",skip=1) %>% mutate(year=2012),
-                          read_excel("data/1304ssnen.xls",skip=1) %>% mutate(year=2013),
-                          read_excel("data/1404ssnen.xls",skip=1) %>% mutate(year=2014),
-                          read_excel("data/1504ssnen.xls",skip=1) %>% mutate(year=2015),
-                          read_excel("data/1604ssnen.xls",skip=1) %>% mutate(year=2016),
-                          read_excel("data/1704ssnen.xls",skip=1) %>% mutate(year=2017),
-                          read_excel("data/1804ssnen.xls",skip=1) %>% mutate(year=2018),
-                          read_excel("data/1904ssnen.xls",skip=1) %>% mutate(year=2019),
-                          read_excel("data/2004ssnen.xls",skip=1) %>% mutate(year=2020))
+                          read_excel("data/1308nsnen.xls",skip=1) %>% mutate(year=2013),
+                          read_excel("data/1408nsnen.xls",skip=1) %>% mutate(year=2014),
+                          read_excel("data/1508nsnen.xls",skip=1) %>% mutate(year=2015),
+                          read_excel("data/1608nanen.xls",skip=1) %>% mutate(year=2016),
+                          read_excel("data/1708nanen.xls",skip=1) %>% mutate(year=2017),
+                          read_excel("data/1808nsnen.xls",skip=1) %>% mutate(year=2018),
+                          read_excel("data/1908nsnen.xls",skip=1) %>% mutate(year=2019),
+                          read_excel("data/2008nsnen.xls",skip=1) %>% mutate(year=2020))
 
 # 2021~2023年までのデータ読み込み＆合体
-pop2021_2023 <- bind_rows(read_excel("data/2104ssnen.xlsx",skip=1) %>% mutate(year=2021),
-                          read_excel("data/2204ssnen.xlsx",skip=1) %>% mutate(year=2022),
-                          read_excel("data/2304ssnen.xlsx",skip=1) %>% mutate(year=2023))
+pop2021_2023 <- bind_rows(read_excel("data/2108nsnen.xlsx",skip=1) %>% mutate(year=2021),
+                          read_excel("data/2208nsnen.xlsx",skip=1) %>% mutate(year=2022),
+                          read_excel("data/2308nsnen.xlsx",skip=1) %>% mutate(year=2023))
 
 # 全部のデータ合体＆整形
 pop1995_2020 <- pop1995_2020 %>%
@@ -80,10 +82,10 @@ pop1995_2020 <- pop1995_2020 %>%
          a100_=`100歳以上`)
 
 pop2021_2023 <- pop2021_2023 %>%
-  rename(code=団体コード,
-         pref=都道府県名,
-         city=市区町村名,
-         sex=性別,
+  rename(code="...1",
+         pref="...2",
+         city="...3",
+         sex="...4",
          all=総数,
          a00_04=`0歳～4歳`,
          a05_09=`5歳～9歳`,
@@ -105,7 +107,9 @@ pop2021_2023 <- pop2021_2023 %>%
          a85_89=`85歳～89歳`,
          a90_94=`90歳～94歳`,
          a95_99=`95歳～99歳`,
-         a100_=`100歳以上`)
+         a100_=`100歳以上`) %>%
+  filter(all!="人") %>% 
+  mutate(across(-c(1,2,3,4), as.numeric)) 
 
 pop <- bind_rows(pop1995_2020,pop2021_2023) %>% 
   select(-`80歳以上`,-`（修正総数）`) %>% 
@@ -115,7 +119,16 @@ pop <- bind_rows(pop1995_2020,pop2021_2023) %>%
   mutate(pref=str_replace(pref,"\\*","")) %>%
   mutate(city=str_replace(city,"　","")) %>%
   mutate(city=str_replace(city,"\\*","")) %>% 
-  filter(!is.na(population))
+  filter(!is.na(population)) %>% 
+  mutate(sex=ifelse(sex=="計","all",
+             ifelse(sex=="男","male",
+             ifelse(sex=="女","female",sex)))) %>% 
+  mutate(city=ifelse(city=="-",NA,city)) %>%
+  mutate(city=str_replace(city,"\u001f","")) %>%
+  mutate(city=str_replace_all(city,"　","")) %>%
+  mutate(city=str_replace_all(city," ","")) %>%
+  mutate(city=ifelse(city=="",NA,city))
+
 
 # CSVファイルを吐き出す。ただしファイルが大きいとGithubにアップロードできないので、ニ分割する。Github上には二つのファイルをさらに圧縮したものを置いている。
 
@@ -129,6 +142,3 @@ pop %>%
 
 pop %>% 
   write_excel_csv("population.csv")
-
-```
-

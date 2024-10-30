@@ -1,7 +1,7 @@
 ---
 title: "市区町村別・年齢層別・男女別人口"
 output: html_document
-date: "2024-03-05"
+date: "2024-10-30"
 author: 朝日新聞デジタル企画報道部　小宮山亮磨 @ryomakom
 ---
 
@@ -47,10 +47,11 @@ pop1995_2020 <- bind_rows(read_excel("data/9504snen.xls",skip=1) %>% mutate(year
                           read_excel("data/1908nsnen.xls",skip=1) %>% mutate(year=2019),
                           read_excel("data/2008nsnen.xls",skip=1) %>% mutate(year=2020))
 
-# 2021~2023年までのデータ読み込み＆合体
-pop2021_2023 <- bind_rows(read_excel("data/2108nsnen.xlsx",skip=1) %>% mutate(year=2021),
+# 2021~2024年までのデータ読み込み＆合体
+pop2021_2024 <- bind_rows(read_excel("data/2108nsnen.xlsx",skip=1) %>% mutate(year=2021),
                           read_excel("data/2208nsnen.xlsx",skip=1) %>% mutate(year=2022),
-                          read_excel("data/2308nsnen.xlsx",skip=1) %>% mutate(year=2023))
+                          read_excel("data/2308nsnen.xlsx",skip=1) %>% mutate(year=2023),
+                          read_excel("data/24nsnen.xlsx",skip=1) %>% mutate(year=2024))
 
 
 # 全部のデータ合体＆整形
@@ -82,7 +83,7 @@ pop1995_2020 <- pop1995_2020 %>%
          a95_99=`95～99`,
          a100_=`100歳以上`)
 
-pop2021_2023 <- pop2021_2023 %>%
+pop2021_2024 <- pop2021_2024 %>%
   rename(code="...1",
          pref="...2",
          city="...3",
@@ -112,7 +113,7 @@ pop2021_2023 <- pop2021_2023 %>%
   filter(all!="人") %>% 
   mutate(across(-c(1,2,3,4), as.numeric)) 
 
-pop <- bind_rows(pop1995_2020,pop2021_2023) %>% 
+pop <- bind_rows(pop1995_2020,pop2021_2024) %>% 
   select(-`80歳以上`,-`（修正総数）`) %>% 
   select(year,everything()) %>% 
   pivot_longer(cols=c(-year,-code,-pref,-city,-sex),names_to = "age",values_to = "population") %>%

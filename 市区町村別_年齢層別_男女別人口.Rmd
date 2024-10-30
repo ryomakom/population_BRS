@@ -50,7 +50,9 @@ pop1995_2020 <- bind_rows(read_excel("data/9504snen.xls",skip=1) %>% mutate(year
 # 2021~2023年までのデータ読み込み＆合体
 pop2021_2023 <- bind_rows(read_excel("data/2108nsnen.xlsx",skip=1) %>% mutate(year=2021),
                           read_excel("data/2208nsnen.xlsx",skip=1) %>% mutate(year=2022),
-                          read_excel("data/2308nsnen.xlsx",skip=1) %>% mutate(year=2023))
+                          read_excel("data/2308nsnen.xlsx",skip=1) %>% mutate(year=2023),
+                          read_excel("data/24nsnen.xlsx",skip=1) %>% mutate(year=2024))
+
 
 # 全部のデータ合体＆整形
 pop1995_2020 <- pop1995_2020 %>%
